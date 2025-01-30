@@ -1,4 +1,4 @@
-# ShiftR
+# SlideR
 
 ![initial](https://github.com/user-attachments/assets/e953e553-0281-495b-98a1-d83e7aca6f1f)
 
