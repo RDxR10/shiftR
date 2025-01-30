@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShiftR</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark-theme {
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+
+        .slider-container {
+            width: 100%;
+            max-width: 1000px;
+            position: relative;
+            overflow: hidden;
+            padding: 20px 0;
+        }
+
+        .slides-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            height: 400px;
+            touch-action: none; /* Prevent default touch actions */
+            user-select: none; /* Prevent text selection */
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* IE10+/Edge */
+        }
+
+        .slide {
+            position: absolute;
+            width: 60%;
+            height: 100%;
+            transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out, filter 0.5s ease-in-out;
+            opacity: 0;
+            transform: scale(0.8) translateX(0);
+            filter: blur(4px);
+            will-change: transform, opacity, filter;
+        }
+
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            pointer-events: none;
+        }
+
+        .dark-theme .slide img {
+            box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .slide.prev {
+            opacity: 0.7;
+            transform: scale(0.6) translateX(-100%);
+            z-index: 1;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1) translateX(0);
+            z-index: 2;
+            filter: blur(0);
+        }
+
+        .slide.next {
+            opacity: 0.7;
+            transform: scale(0.6) translateX(100%);
+            z-index: 1;
+        }
+
+        .prev-btn, .next-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 15px;
+            cursor: pointer;
+            z-index: 3;
+            transition: background-color 0.3s;
+        }
+
+        .dark-theme .prev-btn,
+        .dark-theme .next-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .prev-btn:hover, .next-btn:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .dark-theme .prev-btn:hover,
+        .dark-theme .next-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .prev-btn { left: 20px; }
+        .next-btn { right: 20px; }
+
+        .thumbnails {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .thumbnail {
+            width: 60px;
+            height: 40px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .thumbnail.active-thumbnail {
+            transform: scale(1.1);
+            border-color: #007bff;
+        }
+
+        /* Controls Styles */
+.controls {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.autoplay-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.autoplay-controls select {
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: white;
+}
+
+.dark-theme .autoplay-controls select {
+    background-color: #4a4a4a;
+    color: white;
+    border-color: #666;
+}
+
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background-color: #0056b3;
+        }
+
+        .dark-theme .theme-toggle {
+            background-color: #4a4a4a;
+        }
+
+        .dark-theme .theme-toggle:hover {
+            background-color: #666666;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <div class="autoplay-controls">
+            <button class="play-pause-btn">Play</button>
+            <select class="interval-select">
+                <option value="2000">2s</option>
+                <option value="3000" selected>3s</option>
+                <option value="5000">5s</option>
+                <option value="7000">7s</option>
+            </select>
+        </div>
+        <button class="theme-toggle">Toggle Theme</button>
+    </div>
+    <div class="slider-container">
+        <div class="slides-container">
+            <!--  -->
+        </div>
+        <button class="prev-btn">&#10094;</button>
+        <button class="next-btn">&#10095;</button>
+    </div>
+
+    <div class="thumbnails">
+        <!--  -->
+    </div>
+
+    <script>
+        const images = [
+            "images/messi_2.jpg",
+            "images/vvox.jpg",
+            "images/ronaldo_2.jpg",
+            "images/marco_2.jpg"
+        ];
+
+
+        const themeToggle = document.querySelector('.theme-toggle');
+        const body = document.body;
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-theme');
+
+            const isDarkTheme = body.classList.contains('dark-theme');
+            localStorage.setItem('darkTheme', isDarkTheme);
+        });
+
+
+        window.addEventListener('load', () => {
+            const isDarkTheme = localStorage.getItem('darkTheme') === 'true';
+            if (isDarkTheme) {
+                body.classList.add('dark-theme');
+            }
+        });
+
+
+        const playPauseBtn = document.querySelector('.play-pause-btn');
+        const intervalSelect = document.querySelector('.interval-select');
+        let autoplayInterval = null;
+
+        function toggleAutoplay() {
+            if (autoplayInterval) {
+                clearInterval(autoplayInterval);
+                autoplayInterval = null;
+                playPauseBtn.innerHTML = 'Play';
+            } else {
+                autoplayInterval = setInterval(() => {
+                    currentIndex = getNextIndex();
+                    updateSlides();
+                }, parseInt(intervalSelect.value));
+                playPauseBtn.innerHTML = 'Pause';
+            }
+        }
+
+        playPauseBtn.addEventListener('click', toggleAutoplay);
+        intervalSelect.addEventListener('change', () => {
+            if (autoplayInterval) {
+                toggleAutoplay(); 
+                toggleAutoplay(); 
+            }
+        });
+
+        
+        function pauseAutoplay() {
+            if (autoplayInterval) {
+                toggleAutoplay();
+            }
+        }
+
+
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft':
+                    currentIndex = getPrevIndex();
+                    updateSlides();
+                    pauseAutoplay();
+                    break;
+                case 'ArrowRight':
+                    currentIndex = getNextIndex();
+                    updateSlides();
+                    pauseAutoplay();
+                    break;
+                case ' ':
+                    e.preventDefault(); 
+                    toggleAutoplay();
+                    break;
+            }
+        });
+
+        const slidesContainer = document.querySelector('.slides-container');
+        const thumbnailsContainer = document.querySelector('.thumbnails');
+        let currentIndex = 0;
+        let isDragging = false;
+        let startPosX = 0;
+        let currentTranslate = 0;
+        let prevTranslate = 0;
+        let animationID = 0;
+        let dragThreshold = 50;
+
+        function createSlides() {
+            images.forEach((src, index) => {
+                const slide = document.createElement('div');
+                slide.classList.add('slide');
+
+                const img = document.createElement('img');
+                img.src = src;
+                img.alt = `Slide ${index + 1}`;
+                img.draggable = false;
+
+                slide.appendChild(img);
+                slidesContainer.appendChild(slide);
+
+                const thumbnail = document.createElement('div');
+                thumbnail.classList.add('thumbnail');
+                thumbnail.dataset.index = index;
+
+                const thumbImg = document.createElement('img');
+                thumbImg.src = src;
+                thumbImg.alt = `Thumbnail ${index + 1}`;
+                thumbImg.draggable = false;
+
+                thumbnail.appendChild(thumbImg);
+                thumbnailsContainer.appendChild(thumbnail);
+            });
+
+            updateSlides();
+        }
+
+        function updateSlides() {
+            const slides = document.querySelectorAll('.slide');
+            const thumbnails = document.querySelectorAll('.thumbnail');
+
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active', 'prev', 'next');
+                if (index === currentIndex) {
+                    slide.classList.add('active');
+                } else if (index === getPrevIndex()) {
+                    slide.classList.add('prev');
+                } else if (index === getNextIndex()) {
+                    slide.classList.add('next');
+                }
+            });
+
+            thumbnails.forEach((thumb, index) => {
+                thumb.classList.toggle('active-thumbnail', index === currentIndex);
+            });
+        }
+
+        function getPrevIndex() {
+            return (currentIndex === 0) ? images.length - 1 : currentIndex - 1;
+        }
+
+        function getNextIndex() {
+            return (currentIndex === images.length - 1) ? 0 : currentIndex + 1;
+        }
+
+        function animation() {
+            if (isDragging) {
+                const activeSlide = document.querySelector('.slide.active');
+                const prevSlide = document.querySelector('.slide.prev');
+                const nextSlide = document.querySelector('.slide.next');
+                
+                const currentX = currentTranslate;
+                const scale = Math.max(0.8, 1 - Math.abs(currentX) / 1000);
+                
+                activeSlide.style.transform = `translateX(${currentX}px) scale(${scale})`;
+                activeSlide.style.opacity = Math.max(0.7, 1 - Math.abs(currentX) / 500);
+                
+                if (prevSlide) {
+                    const prevScale = Math.min(1, 0.6 + Math.max(0, -currentX) / 500);
+                    prevSlide.style.transform = `translateX(${currentX - 500}px) scale(${prevScale})`;
+                    prevSlide.style.opacity = Math.min(1, 0.7 + Math.max(0, -currentX) / 500);
+                }
+                
+                if (nextSlide) {
+                    const nextScale = Math.min(1, 0.6 + Math.max(0, currentX) / 500);
+                    nextSlide.style.transform = `translateX(${currentX + 500}px) scale(${nextScale})`;
+                    nextSlide.style.opacity = Math.min(1, 0.7 + Math.max(0, currentX) / 500);
+                }
+                
+                animationID = requestAnimationFrame(animation);
+            }
+        }
+
+        function handleDragStart(e) {
+            isDragging = true;
+            startPosX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            prevTranslate = currentTranslate;
+            
+            cancelAnimationFrame(animationID);
+            animationID = requestAnimationFrame(animation);
+            
+            slidesContainer.style.cursor = 'grabbing';
+        }
+
+        function handleDragMove(e) {
+            if (!isDragging) return;
+            
+            e.preventDefault();
+            
+            const currentPosX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const diffX = currentPosX - startPosX;
+            
+            currentTranslate = prevTranslate + (diffX * 1.5);
+            
+            const maxTranslate = 300;
+            currentTranslate = Math.max(Math.min(currentTranslate, maxTranslate), -maxTranslate);
+        }
+
+        function handleDragEnd() {
+            isDragging = false;
+            cancelAnimationFrame(animationID);
+            
+            const moveDistance = currentTranslate - prevTranslate;
+            
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.style.transform = '';
+                slide.style.opacity = '';
+            });
+            
+            if (Math.abs(moveDistance) > dragThreshold) {
+                currentIndex = moveDistance > 0 ? getPrevIndex() : getNextIndex();
+            }
+            
+            currentTranslate = 0;
+            prevTranslate = 0;
+            
+            updateSlides();
+            slidesContainer.style.cursor = 'grab';
+        }
+
+        document.querySelector('.prev-btn').addEventListener('click', () => {
+            currentIndex = getPrevIndex();
+            updateSlides();
+        });
+
+        document.querySelector('.next-btn').addEventListener('click', () => {
+            currentIndex = getNextIndex();
+            updateSlides();
+            pauseAutoplay();
+        });
+
+        thumbnailsContainer.addEventListener('click', (e) => {
+            const thumbnail = e.target.closest('.thumbnail');
+            if (thumbnail) {
+                currentIndex = parseInt(thumbnail.dataset.index);
+                updateSlides();
+            }
+        });
+
+        slidesContainer.addEventListener('mousedown', handleDragStart);
+        slidesContainer.addEventListener('mousemove', handleDragMove);
+        slidesContainer.addEventListener('mouseup', handleDragEnd);
+        slidesContainer.addEventListener('mouseleave', handleDragEnd);
+
+        slidesContainer.addEventListener('touchstart', handleDragStart);
+        slidesContainer.addEventListener('touchmove', handleDragMove);
+        slidesContainer.addEventListener('touchend', handleDragEnd);
+
+        slidesContainer.addEventListener('contextmenu', e => e.preventDefault());
+
+        createSlides();
+    </script>
+</body>
+</html>
