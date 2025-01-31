@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShiftR</title>
+    <title>SlideR</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -96,7 +96,9 @@
             padding: 15px;
             cursor: pointer;
             z-index: 3;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, opacity 0.3s ease, visibility 0.3s ease;
+            opacity: 0; 
+            visibility: hidden; 
         }
 
         .dark-theme .prev-btn,
@@ -115,6 +117,12 @@
 
         .prev-btn { left: 20px; }
         .next-btn { right: 20px; }
+
+        .slider-container:hover .prev-btn,
+        .slider-container:hover .next-btn {
+            opacity: 1; 
+            visibility: visible; 
+        }
 
         .thumbnails {
             display: flex;
@@ -145,33 +153,32 @@
         }
 
         /* Controls Styles */
-.controls {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    display: flex;
-    gap: 10px;
-}
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
 
-.autoplay-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+        .autoplay-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-.autoplay-controls select {
-    padding: 5px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    background-color: white;
-}
+        .autoplay-controls select {
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: white;
+        }
 
-.dark-theme .autoplay-controls select {
-    background-color: #4a4a4a;
-    color: white;
-    border-color: #666;
-}
-
+        .dark-theme .autoplay-controls select {
+            background-color: #4a4a4a;
+            color: white;
+            border-color: #666;
+        }
 
         .theme-toggle {
             position: fixed;
@@ -232,7 +239,6 @@
             "images/marco_2.jpg"
         ];
 
-
         const themeToggle = document.querySelector('.theme-toggle');
         const body = document.body;
 
@@ -243,14 +249,12 @@
             localStorage.setItem('darkTheme', isDarkTheme);
         });
 
-
         window.addEventListener('load', () => {
             const isDarkTheme = localStorage.getItem('darkTheme') === 'true';
             if (isDarkTheme) {
                 body.classList.add('dark-theme');
             }
         });
-
 
         const playPauseBtn = document.querySelector('.play-pause-btn');
         const intervalSelect = document.querySelector('.interval-select');
@@ -278,13 +282,11 @@
             }
         });
 
-        
         function pauseAutoplay() {
             if (autoplayInterval) {
                 toggleAutoplay();
             }
         }
-
 
         document.addEventListener('keydown', (e) => {
             switch(e.key) {
